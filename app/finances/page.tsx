@@ -8,6 +8,7 @@ import { createClient } from "@/utils/supabase/client";
 import type { Entity, Transaction } from "@/lib/types";
 import Modal from "@/components/Modal";
 import EntityForm from "@/components/EntityForm";
+import EditEntityForm from "@/components/EditEntityForm";
 import TransactionForm from "@/components/TransactionForm";
 import {
   BalanceByEntityChart,
@@ -21,6 +22,7 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Loader2,
+  Pencil,
 } from "lucide-react";
 
 export default function FinancesPage() {
@@ -31,6 +33,7 @@ export default function FinancesPage() {
   const [loading, setLoading] = useState(true);
   const [showEntityModal, setShowEntityModal] = useState(false);
   const [showTxModal, setShowTxModal] = useState(false);
+  const [editingEntity, setEditingEntity] = useState<Entity | null>(null);
 
   const loadData = useCallback(async () => {
     const [{ data: ent }, { data: tx }] = await Promise.all([
@@ -118,7 +121,14 @@ export default function FinancesPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {entities.map((ent) => (
-            <div key={ent.id} className="card">
+            <div key={ent.id} className="card relative">
+              <button
+                onClick={() => setEditingEntity(ent)}
+                className="absolute top-4 right-4 text-textMuted hover:text-primary transition-colors"
+                title="Editar entidade"
+              >
+                <Pencil size={16} />
+              </button>
               <p className="text-textMuted text-sm">{ent.name}</p>
               <p
                 className={`text-2xl font-bold mt-1 ${
@@ -227,6 +237,21 @@ export default function FinancesPage() {
             entities={entities}
             onDone={() => {
               setShowTxModal(false);
+              loadData();
+            }}
+          />
+        </Modal>
+      )}
+
+      {editingEntity && (
+        <Modal
+          title={`Editar ${editingEntity.name}`}
+          onClose={() => setEditingEntity(null)}
+        >
+          <EditEntityForm
+            entity={editingEntity}
+            onDone={() => {
+              setEditingEntity(null);
               loadData();
             }}
           />
